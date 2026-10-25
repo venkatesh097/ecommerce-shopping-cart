@@ -16,10 +16,62 @@ This document tracks all tasks, owners, implementation status, build/test result
 | `TASK-006` | Codebase Inspection, Contract Validation & Member 2 Onboarding | Member 2 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
 | `TASK-007` | Implement Pricing Engine (`PricingServiceImpl`) & Pricing Tests | Member 2 | `COMPLETED` | `BUILD SUCCESS` (57 tests passed, 0 failures) |
 | `TASK-008` | Implement Checkout & Order Processing API | Member 2 | `COMPLETED` | `BUILD SUCCESS` (72 tests passed, 0 failures) |
+| `TASK-009` | Real PostgreSQL API Integration Testing & Local Setup Documentation | Member 2 | `COMPLETED` | `BUILD SUCCESS` (80 tests passed, 0 failures) |
 
 ---
 
 ## Task Details
+
+### TASK-009: Real PostgreSQL API Integration Testing & Local Setup Documentation
+- **Task ID**: `TASK-009`
+- **Owner / Assignee**: Member 2
+- **Status**: `COMPLETED`
+- **Scope**:
+  - Implemented end-to-end API integration tests (`PostgresApiIntegrationTest.java`) running against a live PostgreSQL 17 database instance (not an in-memory substitute).
+  - Explicitly verified that the test suite connects to a live PostgreSQL server (verified via `conn.getMetaData().getDatabaseProductName() == "PostgreSQL"`).
+  - Validated key behaviors against live PostgreSQL:
+    - Product catalog retrieval via `GET /api/products` and `GET /api/products/{id}`.
+    - Valid checkout request (`POST /api/checkout`) generates order, decrements stock in PostgreSQL, calculates pricing breakdown, and clears customer cart.
+    - Direct verification that `Order` and `OrderItem` records are persisted in PostgreSQL tables `orders` and `order_items`.
+    - Verification that HTTP response contains order ID, generated `orderNumber`, status `CONFIRMED`, and accurate price summary.
+    - Rejection of invalid/empty checkout requests:
+      - Empty cart checkout returns HTTP 400 Bad Request.
+      - Invalid validation payload (missing name, malformed email) returns HTTP 400 Bad Request.
+      - Insufficient stock returns HTTP 400 Bad Request with rollback.
+    - Placed order query via `GET /api/orders/{id}` retrieves persisted order from PostgreSQL.
+  - Implemented strict data isolation: `@BeforeEach` and `@AfterEach` clean database tables in reverse dependency order (`orders`, `carts`, `products`), keeping tests repeatable and independent.
+  - Guarded against build breaks using `PostgresAvailableCondition`, which checks PostgreSQL connectivity before starting the test context, ensuring clean fallback per `AGENTS.md`.
+  - Added `application-postgres-test.properties` under `src/test/resources/`.
+  - Documented local PostgreSQL startup instructions (service or standalone cluster) and test invocation in `README.md`.
+- **Files Created / Modified**:
+  - `src/test/java/com/example/ecommerce/PostgresApiIntegrationTest.java` (New live PostgreSQL API integration test suite, 8 tests)
+  - `src/test/java/com/example/ecommerce/PostgresAvailableCondition.java` (JUnit 5 execution condition for environment resilience)
+  - `src/test/resources/application-postgres-test.properties` (PostgreSQL test profile configuration)
+  - `README.md` (Updated with PostgreSQL local setup instructions and test run commands)
+  - `PROJECT_STATUS.md` (Updated with TASK-009 results)
+- **Actual Test / Build Results**:
+  - Command: `./mvnw.cmd test -Dtest=PostgresApiIntegrationTest`
+  - Result: `BUILD SUCCESS` (8 tests passed against real PostgreSQL 17)
+  - Command: `./mvnw.cmd test`
+  - Result: `BUILD SUCCESS` (Total time: 10.992 s)
+  - Test Suite Breakdown:
+    - `PostgresApiIntegrationTest`: **8 tests passed against real PostgreSQL** (0 failures, 0 errors).
+    - `CheckoutServiceTest`: 9 tests passed.
+    - `CheckoutControllerTest`: 6 tests passed.
+    - `PricingServiceTest`: 18 tests passed.
+    - `CartControllerTest`: 12 tests passed.
+    - `ProductControllerTest`: 5 tests passed.
+    - `CartServiceTest`: 14 tests passed.
+    - `ProductServiceTest`: 4 tests passed.
+    - `ProductAndCartIntegrationTest`: 3 tests passed.
+    - `EcommerceApplicationTests`: 1 test passed.
+    - Total: **80 tests run, 0 failures, 0 errors, 0 skipped**.
+- **Blockers / Challenges**:
+  - None. Live PostgreSQL integration tests pass cleanly and repeatable data isolation is verified.
+- **Next Steps**:
+  - Complete backend API scope, pricing engine, checkout workflow, and live database integration verification are fully completed.
+
+---
 
 ### TASK-008: Implement Checkout & Order Processing API
 - **Task ID**: `TASK-008`
@@ -39,37 +91,18 @@ This document tracks all tasks, owners, implementation status, build/test result
   - Implemented REST Controller `CheckoutController`:
     - `POST /api/checkout`: Processes `CheckoutRequest`, returns `200 OK` with `OrderResponse`.
     - `GET /api/orders/{id}`: Retrieves order details by ID, returns `200 OK` with `OrderResponse`.
-  - Added test suites:
-    - `CheckoutServiceTest` (9 tests): empty cart rejection, null cart rejection, missing product rejection, stock validation and deduction, order creation, order query by ID, not found handling.
-    - `CheckoutControllerTest` (6 tests): MockMvc slice tests for 200 OK checkout, 400 Bad Request on empty cart, 400 Bad Request on invalid payload, 400 Bad Request on insufficient stock, 200 OK order lookup, 404 Not Found order lookup.
+  - Added test suites: `CheckoutServiceTest` (9 tests) and `CheckoutControllerTest` (6 tests).
 - **Files Created / Modified**:
-  - `src/main/java/com/example/ecommerce/entity/Order.java` (Added `FetchType.EAGER` to `items`)
-  - `src/main/java/com/example/ecommerce/entity/Cart.java` (Added `FetchType.EAGER` to `items`)
-  - `src/main/java/com/example/ecommerce/repository/OrderRepository.java` (New order repository)
-  - `src/main/java/com/example/ecommerce/service/CheckoutService.java` (New checkout service interface)
-  - `src/main/java/com/example/ecommerce/service/CheckoutServiceImpl.java` (New checkout service implementation)
-  - `src/main/java/com/example/ecommerce/controller/CheckoutController.java` (New checkout controller)
-  - `src/test/java/com/example/ecommerce/service/CheckoutServiceTest.java` (New service unit tests, 9 tests)
-  - `src/test/java/com/example/ecommerce/controller/CheckoutControllerTest.java` (New controller slice tests, 6 tests)
-  - `PROJECT_STATUS.md` (Updated with TASK-008 results)
-- **Actual Test / Build Results**:
-  - Command: `./mvnw.cmd test`
-  - Result: `BUILD SUCCESS` (Total time: 12.206 s)
-  - Test Suite Breakdown:
-    - `CheckoutServiceTest`: **9 tests passed**
-    - `CheckoutControllerTest`: **6 tests passed**
-    - `PricingServiceTest`: 18 tests passed
-    - `CartControllerTest`: 12 tests passed
-    - `CartServiceTest`: 14 tests passed
-    - `ProductControllerTest`: 5 tests passed
-    - `ProductServiceTest`: 4 tests passed
-    - `ProductAndCartIntegrationTest`: 3 tests passed
-    - `EcommerceApplicationTests`: 1 test passed
-    - Total: **72 tests run, 0 failures, 0 errors, 0 skipped**.
-- **Blockers / Challenges**:
-  - None. Transactional checkout, stock decrement, and order mapping pass cleanly.
-- **Next Steps**:
-  - Implement real PostgreSQL API integration tests (`PostgresApiIntegrationTest.java`).
+  - `src/main/java/com/example/ecommerce/entity/Order.java`
+  - `src/main/java/com/example/ecommerce/entity/Cart.java`
+  - `src/main/java/com/example/ecommerce/repository/OrderRepository.java`
+  - `src/main/java/com/example/ecommerce/service/CheckoutService.java`
+  - `src/main/java/com/example/ecommerce/service/CheckoutServiceImpl.java`
+  - `src/main/java/com/example/ecommerce/controller/CheckoutController.java`
+  - `src/test/java/com/example/ecommerce/service/CheckoutServiceTest.java`
+  - `src/test/java/com/example/ecommerce/controller/CheckoutControllerTest.java`
+  - `PROJECT_STATUS.md`
+- **Actual Test / Build Results**: `BUILD SUCCESS` (72 tests passed, 0 failures).
 
 ---
 

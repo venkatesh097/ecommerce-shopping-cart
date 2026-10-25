@@ -10,9 +10,9 @@ A modular Spring Boot backend service for the E-Commerce Shopping Cart college p
 - **Framework**: Spring Boot 3.3.5
 - **Web**: Spring MVC (RESTful API endpoints)
 - **Data Persistence**: Spring Data JPA / Hibernate ORM
-- **Database**: PostgreSQL (with in-memory H2 test profile for isolated automated testing)
+- **Database**: PostgreSQL (with in-memory H2 profile for zero-config local runs and isolated unit testing)
 - **Validation**: Jakarta Bean Validation (`spring-boot-starter-validation`)
-- **Testing**: JUnit 5, Mockito, AssertJ, Spring Boot Test
+- **Testing**: JUnit 5, Mockito, AssertJ, Spring Boot Test, MockMvc
 
 ---
 
@@ -23,23 +23,28 @@ The project adheres to a clean layered architecture under `com.example.ecommerce
 ```
 src/main/java/com/example/ecommerce/
 ├── config/           # Spring configuration classes (CORS, security, custom beans)
-├── controller/       # REST API controllers (ProductController, CartController)
-├── dto/              # Request & response DTOs (ProductDto, CartDto, AddToCartRequest, etc.)
+├── controller/       # REST API controllers (ProductController, CartController, CheckoutController)
+├── dto/              # Request & response DTOs (ProductDto, CartDto, CheckoutRequest, OrderResponse, etc.)
 ├── entity/           # JPA entities (Product, Cart, CartItem, Order, OrderItem, OrderStatus)
 ├── exception/        # Custom exceptions & global exception handlers (@RestControllerAdvice)
-├── repository/       # Spring Data JPA repositories (ProductRepository, CartRepository)
-├── service/          # Service interfaces & implementations (ProductService, CartService, PricingService)
+├── repository/       # Spring Data JPA repositories (ProductRepository, CartRepository, OrderRepository)
+├── service/          # Service interfaces & implementations (ProductService, CartService, PricingService, CheckoutService)
 └── EcommerceApplication.java # Spring Boot application entry point
 
 src/main/resources/
-└── application.properties # Main application properties driven by environment variables
+├── application.properties    # Main application properties driven by environment variables (PostgreSQL default)
+└── application-h2.properties # Zero-config local H2 in-memory development profile
 
 src/test/
 ├── java/com/example/ecommerce/
-│   ├── controller/   # Web layer slice tests (ProductControllerTest, CartControllerTest)
-│   ├── service/      # Service unit tests (ProductServiceTest, CartServiceTest)
-│   └── ProductAndCartIntegrationTest.java # Full SpringBoot end-to-end integration tests
-└── resources/application.properties # Isolated H2 in-memory test configuration
+│   ├── controller/           # Web layer slice tests (ProductControllerTest, CartControllerTest, CheckoutControllerTest)
+│   ├── service/              # Service unit tests (ProductServiceTest, CartServiceTest, PricingServiceTest, CheckoutServiceTest)
+│   ├── ProductAndCartIntegrationTest.java # Full Spring Boot integration tests (H2 in-memory)
+│   ├── PostgresApiIntegrationTest.java    # Full Spring Boot API integration tests (Live PostgreSQL)
+│   └── PostgresAvailableCondition.java    # JUnit 5 environment condition guard
+└── resources/
+    ├── application.properties               # In-memory H2 test configuration
+    └── application-postgres-test.properties # Real PostgreSQL live integration test configuration
 ```
 
 ---
@@ -119,19 +124,78 @@ Passwords and sensitive database credentials must **never** be hard-coded. The a
   curl -X DELETE http://localhost:8080/api/cart
   ```
 
+### Checkout & Orders (`/api/checkout`, `/api/orders`)
+
+- **Process Checkout**:
+  ```bash
+  curl -X POST http://localhost:8080/api/checkout \
+    -H "Content-Type: application/json" \
+    -d '{
+      "cartKey": "demo-cart",
+      "customerName": "Jane Doe",
+      "customerEmail": "jane.doe@example.com",
+      "shippingAddress": "123 Campus Lane, College Park",
+      "couponCode": "DISCOUNT10",
+      "paymentMethod": "CREDIT_CARD"
+    }'
+  ```
+- **Get Order by ID**:
+  ```bash
+  curl -X GET http://localhost:8080/api/orders/1
+  ```
+
 ---
 
-## 🤝 Handover Notes for Member 2 (Pricing & Checkout)
+## 🐘 PostgreSQL Integration Testing
 
-1. **Service Decoupling**:
-   - `CartServiceImpl` depends on the [`PricingService`](file:///c:/Users/athis/OneDrive/Documents/Ecom%20project/src/main/java/com/example/ecommerce/service/PricingService.java) interface using optional autowiring (`@Autowired(required = false)`).
-   - Currently, if no `PricingService` bean is found, cart endpoints calculate the raw subtotal with $0.00$ tax/discount.
-   - Once Member 2 creates `@Service public class PricingServiceImpl implements PricingService`, Spring will automatically inject it and all cart endpoints (`/api/cart`, etc.) will seamlessly reflect discounts, taxes, and grand totals!
-2. **Reading Cart Items**:
-   - Member 2 can call `cartService.getCartEntity("demo-cart")` to obtain the JPA `Cart` entity, or evaluate `cart.getItems()` directly.
-   - Each `CartItem` entity exposes `getUnitPrice()`, `getQuantity()`, and `getProduct()`.
-3. **Monetary Precision**:
-   - Remember to use `BigDecimal` with 2 decimal places and `RoundingMode.HALF_UP` for all calculation returns in `PricingResultDto`.
+The project includes end-to-end API integration tests (`PostgresApiIntegrationTest.java`) that execute against a **real PostgreSQL database**, verifying live database queries, stock deduction, pricing calculations, and transactional persistence of `Order` and `OrderItem` records.
+
+### How to Start PostgreSQL Locally
+
+#### Option A: Local PostgreSQL Server (Installed Service)
+1. Ensure your PostgreSQL service is running on port `5432` or `5433`.
+2. Create the test database if it does not exist:
+   ```sql
+   CREATE DATABASE ecommerce_test_db;
+   ```
+
+#### Option B: Standalone Local PostgreSQL Cluster (No Admin Required)
+If running manually without service administration:
+```bash
+# 1. Initialize cluster in temporary directory
+initdb -U postgres -A trust -D "C:/Users/<Username>/AppData/Local/Temp/pg_test_db"
+
+# 2. Start PostgreSQL daemon on port 5433
+postgres -D "C:/Users/<Username>/AppData/Local/Temp/pg_test_db" -p 5433
+
+# 3. In another terminal, create test database
+psql -U postgres -p 5433 -h 127.0.0.1 -d postgres -c "CREATE DATABASE ecommerce_test_db;"
+```
+
+### Running the Integration Tests Against PostgreSQL
+
+```bash
+# Run all tests (including PostgresApiIntegrationTest if PostgreSQL is reachable)
+./mvnw test
+
+# Or run the PostgreSQL integration suite directly:
+./mvnw test -Dtest=PostgresApiIntegrationTest
+```
+
+#### Customizing PostgreSQL Test Connection Parameters:
+Override connection details using environment variables or Maven system properties:
+- `POSTGRES_TEST_HOST`: Default `localhost`
+- `POSTGRES_TEST_PORT`: Default `5433` (or `5432`)
+- `POSTGRES_TEST_DB`: Default `ecommerce_test_db`
+- `POSTGRES_TEST_USER`: Default `postgres`
+- `POSTGRES_TEST_PASSWORD`: Default empty
+
+Example:
+```bash
+./mvnw test -Dtest=PostgresApiIntegrationTest -DPOSTGRES_TEST_PORT=5432 -DPOSTGRES_TEST_PASSWORD=my_password
+```
+
+> **Note on Environment Resilience**: `PostgresApiIntegrationTest` is guarded by `PostgresAvailableCondition`. If PostgreSQL is not reachable at the configured port, the suite will cleanly skip without breaking standard development builds, adhering to `AGENTS.md`.
 
 ---
 
@@ -139,24 +203,21 @@ Passwords and sensitive database credentials must **never** be hard-coded. The a
 
 ### Prerequisites
 - JDK 17 or JDK 21+ installed
-- PostgreSQL 14+ (or set environment variables pointing to PostgreSQL instance)
 - Maven 3.8+ (or use the provided Maven wrapper `./mvnw`)
+- PostgreSQL 14+ (or run with `--spring.profiles.active=h2` for zero-config mode)
 
-### Build & Test
+### Build & Run Tests
 ```bash
-# Run all unit and integration tests (39 tests)
-mvn test
-# or
 ./mvnw test
 ```
 
 ### Run the Application
 ```bash
-# Set your environment variables
-export DB_USERNAME=postgres
-export DB_PASSWORD=your_secure_password
-export DB_NAME=ecommerce_db
+# Run with local PostgreSQL
+./mvnw spring-boot:run
 
-# Run with Spring Boot plugin
-mvn spring-boot:run
+# Or run zero-configuration mode with H2 in-memory (PowerShell requires quotes):
+./mvnw spring-boot:run "-Dspring-boot.run.profiles=h2"
+# Or via environment variable in PowerShell:
+$env:SPRING_PROFILES_ACTIVE="h2"; ./mvnw.cmd spring-boot:run
 ```
