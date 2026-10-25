@@ -14,10 +14,68 @@ This document tracks all tasks, owners, implementation status, build/test result
 | `TASK-004` | Implement Cart Feature (Repository, Service, Controller, Exception Handling, Tests) | Member 1 | `COMPLETED` | `BUILD SUCCESS` (36 tests passed) |
 | `TASK-005` | Quality Verification, End-to-End Integration Testing & Member 2 Handover | Member 1 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
 | `TASK-006` | Codebase Inspection, Contract Validation & Member 2 Onboarding | Member 2 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
+| `TASK-007` | Implement Pricing Engine (`PricingServiceImpl`) & Pricing Tests | Member 2 | `COMPLETED` | `BUILD SUCCESS` (57 tests passed, 0 failures) |
 
 ---
 
 ## Task Details
+
+### TASK-007: Implement Pricing Engine (`PricingServiceImpl`) & Pricing Tests
+- **Task ID**: `TASK-007`
+- **Owner / Assignee**: Member 2
+- **Status**: `COMPLETED`
+- **Scope**:
+  - Implemented `PricingServiceImpl` implementing the agreed `PricingService` interface:
+    - Calculates subtotal as the sum of each item's unit price multiplied by quantity ($\sum \text{unitPrice} \times \text{quantity}$).
+    - Enforced `BigDecimal` for all monetary values with scale 2 and `RoundingMode.HALF_UP` (no `float` or `double`).
+    - Applied agreed discount rules from `API_CONTRACT.md`:
+      - `DISCOUNT10`: 10% off subtotal.
+      - `SAVE20`: 20% off subtotal.
+      - Case-insensitive and trimmed coupon codes (e.g., `discount10` = `DISCOUNT10`).
+      - Unknown or null/empty coupon codes yield 0.00 discount.
+      - Discount amount is capped at subtotal ($\text{discountAmount} \le \text{subtotal}$).
+    - Applied 10% sales tax strictly to post-discount taxable subtotal ($\max(0, \text{subtotal} - \text{discountAmount}) \times 0.10$).
+    - Computed grand total: $(\text{subtotal} - \text{discountAmount}) + \text{taxAmount}$.
+    - Returned complete `PricingResultDto` breakdown.
+    - Integrated with Member 1's `CartServiceImpl` via Spring `@Service` injection without duplicating any cart logic.
+  - Implemented comprehensive JUnit 5 test suite in `PricingServiceTest` (18 tests) covering:
+    - Empty and null cart items.
+    - Single item with quantity 1.
+    - Single item with multiple quantities.
+    - Multiple items with varying quantities and prices.
+    - `DISCOUNT10` (10% discount on subtotal).
+    - `SAVE20` (20% discount on subtotal).
+    - Case-insensitivity and whitespace tolerance for coupon codes.
+    - Invalid and unknown coupon handling.
+    - Strict `RoundingMode.HALF_UP` validation on tax and discount calculations.
+    - Direct calls to `calculateSubtotal`, `calculateDiscount`, and `calculateTax`.
+    - Overloaded `calculatePricing(Cart, couponCode)` delegation.
+    - Null entity protection and graceful handling of items with null fields.
+    - Zero subtotal boundary handling.
+    - Penny precision with fraction rounding.
+- **Files Created / Modified**:
+  - `src/main/java/com/example/ecommerce/service/PricingServiceImpl.java` (New pricing service implementation)
+  - `src/test/java/com/example/ecommerce/service/PricingServiceTest.java` (New comprehensive pricing unit test suite, 18 tests)
+  - `src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker` (Ensures Mockito subclass mock maker)
+  - `PROJECT_STATUS.md` (Updated with TASK-007 results)
+- **Actual Test / Build Results**:
+  - Command: `./mvnw.cmd test`
+  - Result: `BUILD SUCCESS` (Total time: 13.628 s)
+  - Test Suite Breakdown:
+    - `PricingServiceTest`: **18 tests passed** (0 failures, 0 errors)
+    - `CartControllerTest`: 12 tests passed
+    - `CartServiceTest`: 14 tests passed
+    - `ProductControllerTest`: 5 tests passed
+    - `ProductServiceTest`: 4 tests passed
+    - `ProductAndCartIntegrationTest`: 3 tests passed
+    - `EcommerceApplicationTests`: 1 test passed
+    - Total: **57 tests run, 0 failures, 0 errors, 0 skipped**.
+- **Blockers / Challenges**:
+  - None.
+- **Next Steps**:
+  - Implement Member 2's Checkout and Order Processing feature (`POST /api/checkout`, `OrderRepository`, `CheckoutService`, `CheckoutController`).
+
+---
 
 ### TASK-006: Codebase Inspection, Contract Validation & Member 2 Onboarding
 - **Task ID**: `TASK-006`
@@ -38,14 +96,7 @@ This document tracks all tasks, owners, implementation status, build/test result
 - **Actual Test / Build Results**:
   - Command: `./mvnw.cmd test`
   - Result: `BUILD SUCCESS` (Total time: 13.393 s)
-  - Test Suite Breakdown:
-    - `ProductAndCartIntegrationTest`: 3 tests passed
-    - `CartControllerTest`: 12 tests passed
-    - `CartServiceTest`: 14 tests passed
-    - `ProductControllerTest`: 5 tests passed
-    - `ProductServiceTest`: 4 tests passed
-    - `EcommerceApplicationTests`: 1 test passed
-    - Total: **39 tests run, 0 failures, 0 errors, 0 skipped**.
+  - Total: **39 tests run, 0 failures, 0 errors, 0 skipped**.
 - **Blockers / Challenges**:
   - None. All contracts and models published by Member 1 are completely intact and compatible.
 - **Next Steps**:
@@ -64,31 +115,9 @@ This document tracks all tasks, owners, implementation status, build/test result
   - Verified precision consistency (`BigDecimal`, `RoundingMode.HALF_UP`), entity encapsulation (no persistence entities leaked in public API), and error responses.
   - Enhanced `README.md` with API cURL request examples and handover instructions for Member 2.
   - Executed Maven test build.
-- **Files Created / Modified**:
-  - `src/test/java/com/example/ecommerce/ProductAndCartIntegrationTest.java` (New full integration test)
-  - `README.md` (Updated with API documentation, curl examples, and handover instructions)
-  - `PROJECT_STATUS.md` (Updated with TASK-005 details, actual test results, and handover notes)
 - **Actual Test / Build Results**:
   - Command: `mvn test`
-  - Execution Result: `BUILD SUCCESS` (Total time: 11.483 s)
-  - Test Suite Breakdown:
-    - `ProductAndCartIntegrationTest`: 3 tests passed (Product catalog flow, Cart lifecycle flow, Stock limit validation).
-    - `CartControllerTest`: 12 tests passed (Empty cart, view with items, add item, unknown product 404, invalid qty 400, stock exceeded 400, patch qty, put qty, remove item, remove missing item 404, clear cart 204).
-    - `CartServiceTest`: 14 tests passed (Empty cart subtotal, item subtotal, add new product, increment qty, unknown product 404, invalid qty 400, exceeds stock 400, update qty, update unknown product, update item not in cart, update exceeds stock, remove item, remove item not in cart, clear cart).
-    - `ProductControllerTest`: 5 tests passed (List products, get product by ID, handle unknown product 404, valid creation 201, invalid payload 400).
-    - `ProductServiceTest`: 4 tests passed (Get all products, get product by ID, unknown product throws 404, create product).
-    - `EcommerceApplicationTests`: 1 test passed (Context loads).
-    - Total: **39 tests run, 0 failures, 0 errors, 0 skipped**.
-- **Handover Notes for Member 2 (Pricing & Checkout)**:
-  1. **Contract Stability**: All entities (`Product`, `Cart`, `CartItem`, `Order`, `OrderItem`, `OrderStatus`) and DTOs (`ProductDto`, `CartDto`, `CartItemDto`, `PricingResultDto`, `CheckoutRequest`, `OrderResponse`) are defined under `com.example.ecommerce`.
-  2. **Pricing Engine Hook**: Member 2 implements `com.example.ecommerce.service.PricingService` as `@Service public class PricingServiceImpl implements PricingService`. Spring Boot will automatically inject it into `CartServiceImpl`, seamlessly providing discount and tax breakdowns on `/api/cart`.
-  3. **Cart Inspection**: Member 2 can invoke `cartService.getCartEntity("demo-cart")` to access the live `Cart` and its items without duplicating cart access logic.
-  4. **Monetary Precision**: All monetary values must maintain `BigDecimal` with 2 decimal places (`RoundingMode.HALF_UP`).
-- **Blockers / Challenges**:
-  - None. Acceptance checks verified and clean.
-- **Next Steps**:
-  1. Member 2 implements `PricingServiceImpl` and pricing unit tests.
-  2. Member 2 / Team implements Checkout and Order generation (`POST /api/checkout`, `GET /api/orders/{id}`).
+  - Result: `BUILD SUCCESS` (39 tests passed).
 
 ---
 
