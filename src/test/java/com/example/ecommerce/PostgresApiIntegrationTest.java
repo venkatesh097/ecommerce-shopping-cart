@@ -109,8 +109,10 @@ class PostgresApiIntegrationTest {
             String dbProduct = conn.getMetaData().getDatabaseProductName();
             String dbVersion = conn.getMetaData().getDatabaseProductVersion();
             assertEquals("PostgreSQL", dbProduct, "Tests must run against real PostgreSQL, not an in-memory substitute");
-            assertTrue(dbVersion.contains("17") || dbVersion.contains("16") || dbVersion.contains("15") || dbVersion.contains("14") || dbVersion.contains("13"),
-                    "Expected modern PostgreSQL version, got: " + dbVersion);
+           assertTrue(
+        dbVersion.matches("(?s).*\\b(13|14|15|16|17|18)\\..*"),
+        "Expected PostgreSQL version 13–18, got: " + dbVersion
+);
         }
     }
 

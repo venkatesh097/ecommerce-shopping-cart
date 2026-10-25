@@ -28,13 +28,79 @@ jobs:
           java-version: ${{ matrix.java-version }}
           cache: maven
 
-      - name: Build and run tests
-        run: mvn --batch-mode --no-transfer-progress clean verify
+      - name: Build and run unit tests
+        run: mvn --batch-mode --no-transfer-progress clean test
+
+  integration-test:
+    name: PostgreSQL Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ecommerce_test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ecommerce_test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run PostgreSQL integration tests
+        env:
+          POSTGRES_TEST_HOST: localhost
+          POSTGRES_TEST_PORT: 5432
+          POSTGRES_TEST_DB: ecommerce_test_db
+          POSTGRES_TEST_USER: postgres
+          POSTGRES_TEST_PASSWORD: postgres
+        run: |
+          mvn --batch-mode --no-transfer-progress -Dtest=PostgresApiIntegrationTest test
+          if grep -q "Tests run: 8, Failures: 0, Errors: 0, Skipped: 0" target/surefire-reports/com.example.ecommerce.PostgresApiIntegrationTest.txt; then
+            echo "PostgreSQL integration tests executed successfully."
+          else
+            echo "PostgreSQL integration tests failed or were skipped."
+            exit 1
+          fi
+
+  package:
+    name: Package Application JAR
+    runs-on: ubuntu-latest
+    needs: [build-and-test, integration-test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Package application
+        run: mvn --batch-mode --no-transfer-progress -DskipTests package
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ecommerce-jar-java-${{matrix.java-version }}
+          name: ecommerce-shopping-cart-jar
           path: target/*.jar
           if-no-files-found: error
           retention-days: 7
+
