@@ -13,10 +13,46 @@ This document tracks all tasks, owners, implementation status, build/test result
 | `TASK-003` | Implement Product Catalog Feature (Repository, Service, Controller, Tests) | Member 1 | `COMPLETED` | `BUILD SUCCESS` (10 tests passed) |
 | `TASK-004` | Implement Cart Feature (Repository, Service, Controller, Exception Handling, Tests) | Member 1 | `COMPLETED` | `BUILD SUCCESS` (36 tests passed) |
 | `TASK-005` | Quality Verification, End-to-End Integration Testing & Member 2 Handover | Member 1 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
+| `TASK-006` | Codebase Inspection, Contract Validation & Member 2 Onboarding | Member 2 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
 
 ---
 
 ## Task Details
+
+### TASK-006: Codebase Inspection, Contract Validation & Member 2 Onboarding
+- **Task ID**: `TASK-006`
+- **Owner / Assignee**: Member 2
+- **Status**: `COMPLETED`
+- **Scope**:
+  - Inspected repository structure, Maven dependencies in `pom.xml`, and Git status.
+  - Concluded merge with `origin/main` to synchronize with latest shared repository changes.
+  - Inspected existing JPA entities created by Member 1 (`Product`, `Cart`, `CartItem`, `Order`, `OrderItem`, `OrderStatus`).
+  - Verified `CartService` interface and its implementation `CartServiceImpl`, confirming availability of `getCartEntity(cartKey)` for direct item inspection.
+  - Verified `PricingService` interface contract in `com.example.ecommerce.service` matching `API_CONTRACT.md`.
+  - Audited shared DTOs (`PricingResultDto`, `CheckoutRequest`, `OrderResponse`, `OrderItemResponse`).
+  - Verified database configurations (`application.properties` with PostgreSQL default using environment variables, `application-h2.properties` for zero-config local runs, and `src/test/resources/application.properties` for tests).
+  - Executed existing test suite (`./mvnw.cmd test`) to ensure baseline integrity before implementing pricing and checkout logic.
+  - Confirmed 0 blockers: All required shared models and interfaces are published, aligned, and ready for Member 2 implementation.
+- **Files Created / Modified**:
+  - `PROJECT_STATUS.md` (Updated with Member 2 inspection results)
+- **Actual Test / Build Results**:
+  - Command: `./mvnw.cmd test`
+  - Result: `BUILD SUCCESS` (Total time: 13.393 s)
+  - Test Suite Breakdown:
+    - `ProductAndCartIntegrationTest`: 3 tests passed
+    - `CartControllerTest`: 12 tests passed
+    - `CartServiceTest`: 14 tests passed
+    - `ProductControllerTest`: 5 tests passed
+    - `ProductServiceTest`: 4 tests passed
+    - `EcommerceApplicationTests`: 1 test passed
+    - Total: **39 tests run, 0 failures, 0 errors, 0 skipped**.
+- **Blockers / Challenges**:
+  - None. All contracts and models published by Member 1 are completely intact and compatible.
+- **Next Steps**:
+  - Proceed to implement `PricingServiceImpl` implementing `PricingService` with agreed discount (`DISCOUNT10`, `SAVE20`), 10% tax, and `BigDecimal` scale 2 `HALF_UP` calculations.
+  - Add comprehensive JUnit 5 unit tests for `PricingService`.
+
+---
 
 ### TASK-005: Quality Verification, End-to-End Integration Testing & Member 2 Handover
 - **Task ID**: `TASK-005`

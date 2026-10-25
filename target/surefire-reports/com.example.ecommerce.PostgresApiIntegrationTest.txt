@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.example.ecommerce.PostgresApiIntegrationTest
--------------------------------------------------------------------------------
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.740 s -- in com.example.ecommerce.PostgresApiIntegrationTest
