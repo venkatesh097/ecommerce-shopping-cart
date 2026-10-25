@@ -15,10 +15,63 @@ This document tracks all tasks, owners, implementation status, build/test result
 | `TASK-005` | Quality Verification, End-to-End Integration Testing & Member 2 Handover | Member 1 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
 | `TASK-006` | Codebase Inspection, Contract Validation & Member 2 Onboarding | Member 2 | `COMPLETED` | `BUILD SUCCESS` (39 tests passed, 0 failures) |
 | `TASK-007` | Implement Pricing Engine (`PricingServiceImpl`) & Pricing Tests | Member 2 | `COMPLETED` | `BUILD SUCCESS` (57 tests passed, 0 failures) |
+| `TASK-008` | Implement Checkout & Order Processing API | Member 2 | `COMPLETED` | `BUILD SUCCESS` (72 tests passed, 0 failures) |
 
 ---
 
 ## Task Details
+
+### TASK-008: Implement Checkout & Order Processing API
+- **Task ID**: `TASK-008`
+- **Owner / Assignee**: Member 2
+- **Status**: `COMPLETED`
+- **Scope**:
+  - Implemented Spring Data JPA repository `OrderRepository` supporting query by business `orderNumber`.
+  - Implemented `CheckoutService` and `CheckoutServiceImpl` with `@Transactional` management for consistent persistence of `Order` and `OrderItem` records:
+    - Rejects empty, missing, or null carts with `IllegalArgumentException`.
+    - Validates product stock and decrements inventory in `ProductRepository`.
+    - Throws `InsufficientStockException` if requested quantities exceed available stock.
+    - Calls `PricingService` for final subtotal, discount, tax, and grand total calculations.
+    - Generates unique business `orderNumber` (`ORD-YYYYMMDD-XXXXXXXX`).
+    - Maps and attaches `OrderItem` entities to the `Order` entity using cascading persistence.
+    - Clears customer shopping cart upon successful order placement (`cartService.clearCart`).
+    - Implemented `getOrderById` for querying placed orders with `ResourceNotFoundException`.
+  - Implemented REST Controller `CheckoutController`:
+    - `POST /api/checkout`: Processes `CheckoutRequest`, returns `200 OK` with `OrderResponse`.
+    - `GET /api/orders/{id}`: Retrieves order details by ID, returns `200 OK` with `OrderResponse`.
+  - Added test suites:
+    - `CheckoutServiceTest` (9 tests): empty cart rejection, null cart rejection, missing product rejection, stock validation and deduction, order creation, order query by ID, not found handling.
+    - `CheckoutControllerTest` (6 tests): MockMvc slice tests for 200 OK checkout, 400 Bad Request on empty cart, 400 Bad Request on invalid payload, 400 Bad Request on insufficient stock, 200 OK order lookup, 404 Not Found order lookup.
+- **Files Created / Modified**:
+  - `src/main/java/com/example/ecommerce/entity/Order.java` (Added `FetchType.EAGER` to `items`)
+  - `src/main/java/com/example/ecommerce/entity/Cart.java` (Added `FetchType.EAGER` to `items`)
+  - `src/main/java/com/example/ecommerce/repository/OrderRepository.java` (New order repository)
+  - `src/main/java/com/example/ecommerce/service/CheckoutService.java` (New checkout service interface)
+  - `src/main/java/com/example/ecommerce/service/CheckoutServiceImpl.java` (New checkout service implementation)
+  - `src/main/java/com/example/ecommerce/controller/CheckoutController.java` (New checkout controller)
+  - `src/test/java/com/example/ecommerce/service/CheckoutServiceTest.java` (New service unit tests, 9 tests)
+  - `src/test/java/com/example/ecommerce/controller/CheckoutControllerTest.java` (New controller slice tests, 6 tests)
+  - `PROJECT_STATUS.md` (Updated with TASK-008 results)
+- **Actual Test / Build Results**:
+  - Command: `./mvnw.cmd test`
+  - Result: `BUILD SUCCESS` (Total time: 12.206 s)
+  - Test Suite Breakdown:
+    - `CheckoutServiceTest`: **9 tests passed**
+    - `CheckoutControllerTest`: **6 tests passed**
+    - `PricingServiceTest`: 18 tests passed
+    - `CartControllerTest`: 12 tests passed
+    - `CartServiceTest`: 14 tests passed
+    - `ProductControllerTest`: 5 tests passed
+    - `ProductServiceTest`: 4 tests passed
+    - `ProductAndCartIntegrationTest`: 3 tests passed
+    - `EcommerceApplicationTests`: 1 test passed
+    - Total: **72 tests run, 0 failures, 0 errors, 0 skipped**.
+- **Blockers / Challenges**:
+  - None. Transactional checkout, stock decrement, and order mapping pass cleanly.
+- **Next Steps**:
+  - Implement real PostgreSQL API integration tests (`PostgresApiIntegrationTest.java`).
+
+---
 
 ### TASK-007: Implement Pricing Engine (`PricingServiceImpl`) & Pricing Tests
 - **Task ID**: `TASK-007`
@@ -38,42 +91,13 @@ This document tracks all tasks, owners, implementation status, build/test result
     - Computed grand total: $(\text{subtotal} - \text{discountAmount}) + \text{taxAmount}$.
     - Returned complete `PricingResultDto` breakdown.
     - Integrated with Member 1's `CartServiceImpl` via Spring `@Service` injection without duplicating any cart logic.
-  - Implemented comprehensive JUnit 5 test suite in `PricingServiceTest` (18 tests) covering:
-    - Empty and null cart items.
-    - Single item with quantity 1.
-    - Single item with multiple quantities.
-    - Multiple items with varying quantities and prices.
-    - `DISCOUNT10` (10% discount on subtotal).
-    - `SAVE20` (20% discount on subtotal).
-    - Case-insensitivity and whitespace tolerance for coupon codes.
-    - Invalid and unknown coupon handling.
-    - Strict `RoundingMode.HALF_UP` validation on tax and discount calculations.
-    - Direct calls to `calculateSubtotal`, `calculateDiscount`, and `calculateTax`.
-    - Overloaded `calculatePricing(Cart, couponCode)` delegation.
-    - Null entity protection and graceful handling of items with null fields.
-    - Zero subtotal boundary handling.
-    - Penny precision with fraction rounding.
+  - Implemented comprehensive JUnit 5 test suite in `PricingServiceTest` (18 tests).
 - **Files Created / Modified**:
-  - `src/main/java/com/example/ecommerce/service/PricingServiceImpl.java` (New pricing service implementation)
-  - `src/test/java/com/example/ecommerce/service/PricingServiceTest.java` (New comprehensive pricing unit test suite, 18 tests)
-  - `src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker` (Ensures Mockito subclass mock maker)
-  - `PROJECT_STATUS.md` (Updated with TASK-007 results)
-- **Actual Test / Build Results**:
-  - Command: `./mvnw.cmd test`
-  - Result: `BUILD SUCCESS` (Total time: 13.628 s)
-  - Test Suite Breakdown:
-    - `PricingServiceTest`: **18 tests passed** (0 failures, 0 errors)
-    - `CartControllerTest`: 12 tests passed
-    - `CartServiceTest`: 14 tests passed
-    - `ProductControllerTest`: 5 tests passed
-    - `ProductServiceTest`: 4 tests passed
-    - `ProductAndCartIntegrationTest`: 3 tests passed
-    - `EcommerceApplicationTests`: 1 test passed
-    - Total: **57 tests run, 0 failures, 0 errors, 0 skipped**.
-- **Blockers / Challenges**:
-  - None.
-- **Next Steps**:
-  - Implement Member 2's Checkout and Order Processing feature (`POST /api/checkout`, `OrderRepository`, `CheckoutService`, `CheckoutController`).
+  - `src/main/java/com/example/ecommerce/service/PricingServiceImpl.java`
+  - `src/test/java/com/example/ecommerce/service/PricingServiceTest.java`
+  - `src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker`
+  - `PROJECT_STATUS.md`
+- **Actual Test / Build Results**: `BUILD SUCCESS` (57 tests passed, 0 failures).
 
 ---
 
@@ -81,27 +105,8 @@ This document tracks all tasks, owners, implementation status, build/test result
 - **Task ID**: `TASK-006`
 - **Owner / Assignee**: Member 2
 - **Status**: `COMPLETED`
-- **Scope**:
-  - Inspected repository structure, Maven dependencies in `pom.xml`, and Git status.
-  - Concluded merge with `origin/main` to synchronize with latest shared repository changes.
-  - Inspected existing JPA entities created by Member 1 (`Product`, `Cart`, `CartItem`, `Order`, `OrderItem`, `OrderStatus`).
-  - Verified `CartService` interface and its implementation `CartServiceImpl`, confirming availability of `getCartEntity(cartKey)` for direct item inspection.
-  - Verified `PricingService` interface contract in `com.example.ecommerce.service` matching `API_CONTRACT.md`.
-  - Audited shared DTOs (`PricingResultDto`, `CheckoutRequest`, `OrderResponse`, `OrderItemResponse`).
-  - Verified database configurations (`application.properties` with PostgreSQL default using environment variables, `application-h2.properties` for zero-config local runs, and `src/test/resources/application.properties` for tests).
-  - Executed existing test suite (`./mvnw.cmd test`) to ensure baseline integrity before implementing pricing and checkout logic.
-  - Confirmed 0 blockers: All required shared models and interfaces are published, aligned, and ready for Member 2 implementation.
-- **Files Created / Modified**:
-  - `PROJECT_STATUS.md` (Updated with Member 2 inspection results)
-- **Actual Test / Build Results**:
-  - Command: `./mvnw.cmd test`
-  - Result: `BUILD SUCCESS` (Total time: 13.393 s)
-  - Total: **39 tests run, 0 failures, 0 errors, 0 skipped**.
-- **Blockers / Challenges**:
-  - None. All contracts and models published by Member 1 are completely intact and compatible.
-- **Next Steps**:
-  - Proceed to implement `PricingServiceImpl` implementing `PricingService` with agreed discount (`DISCOUNT10`, `SAVE20`), 10% tax, and `BigDecimal` scale 2 `HALF_UP` calculations.
-  - Add comprehensive JUnit 5 unit tests for `PricingService`.
+- **Scope**: Codebase audit, Git sync, environment setup, and verification of contracts and tests.
+- **Actual Test / Build Results**: `BUILD SUCCESS` (39 tests passed, 0 failures).
 
 ---
 
@@ -111,13 +116,10 @@ This document tracks all tasks, owners, implementation status, build/test result
 - **Status**: `COMPLETED`
 - **Scope**:
   - Full code review of Product and Cart implementations against `API_CONTRACT.md`.
-  - Added full end-to-end integration test (`ProductAndCartIntegrationTest.java`) exercising both Product catalog and Cart lifecycle against active repository persistence and Spring Boot web layer.
-  - Verified precision consistency (`BigDecimal`, `RoundingMode.HALF_UP`), entity encapsulation (no persistence entities leaked in public API), and error responses.
+  - Added full end-to-end integration test (`ProductAndCartIntegrationTest.java`).
   - Enhanced `README.md` with API cURL request examples and handover instructions for Member 2.
   - Executed Maven test build.
-- **Actual Test / Build Results**:
-  - Command: `mvn test`
-  - Result: `BUILD SUCCESS` (39 tests passed).
+- **Actual Test / Build Results**: `BUILD SUCCESS` (39 tests passed).
 
 ---
 
