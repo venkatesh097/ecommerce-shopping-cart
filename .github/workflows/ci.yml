@@ -30,3 +30,11 @@ jobs:
 
       - name: Build and run tests
         run: mvn --batch-mode --no-transfer-progress clean verify
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecommerce-jar-java-${{matrix.java-version }}
+          path: target/*.jar
+          if-no-files-found: error
+          retention-days: 7
