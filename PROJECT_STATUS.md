@@ -17,10 +17,76 @@ This document tracks all tasks, owners, implementation status, build/test result
 | `TASK-007` | Implement Pricing Engine (`PricingServiceImpl`) & Pricing Tests | Member 2 | `COMPLETED` | `BUILD SUCCESS` (57 tests passed, 0 failures) |
 | `TASK-008` | Implement Checkout & Order Processing API | Member 2 | `COMPLETED` | `BUILD SUCCESS` (72 tests passed, 0 failures) |
 | `TASK-009` | Real PostgreSQL API Integration Testing & Local Setup Documentation | Member 2 | `COMPLETED` | `BUILD SUCCESS` (80 tests passed, 0 failures) |
+| `TASK-010` | End-to-End Integration Verification, Feature Alignment & CI Readiness | Member 2 (with Member 1) | `COMPLETED` | `BUILD SUCCESS` (81 tests passed, 0 failures; 8/8 PostgreSQL tests passed) |
+
+---
+
+## Current Status Overview Summary
+- **Overall Project Health**: **GREEN / READY FOR CI**
+- **Unit & Slice Test Coverage**: 81 automated tests passing across controller, service, repository, and integration layers.
+- **Database Integration**: 8 end-to-end integration tests passing directly against a live PostgreSQL 17 database cluster (`ecommerce_test_db`).
+- **End-to-End Verification**: Complete user purchase flow (product browse -> cart add -> cart modify -> pricing breakdown -> checkout -> order retrieval -> cart empty) verified in both in-memory H2 and live PostgreSQL test suites.
+- **Blockers**: None.
+- **CI Readiness**: Fully ready for GitHub Actions CI setup.
 
 ---
 
 ## Task Details
+
+### TASK-010: End-to-End Integration Verification, Feature Alignment & CI Readiness
+- **Task ID**: `TASK-010`
+- **Owner / Assignee**: Member 2 (in coordination with Member 1)
+- **Status**: `COMPLETED`
+- **Scope**:
+  - Reviewed Member 1's product and cart features alongside Member 2's pricing engine and checkout/order processing features.
+  - Verified no contract violations or duplicate model structures across packages.
+  - Added full end-to-end purchase lifecycle test `testCompletePurchaseFlow()` in `ProductAndCartIntegrationTest`:
+    1. `GET /api/products`: Discover catalog items and prices.
+    2. `POST /api/cart/items`: Add selected product to cart with quantity.
+    3. `PATCH /api/cart/items/{id}`: Update cart item quantity and verify cart item subtotal recalculation.
+    4. `GET /api/cart?couponCode=DISCOUNT10`: Verify pricing calculation with discount and 10% post-discount tax.
+    5. `POST /api/checkout`: Process checkout with valid customer details and coupon code, verify order creation, stock decrement, and cart clearing.
+    6. `GET /api/orders/{id}`: Verify placed order details and persisted price breakdown.
+    7. `GET /api/cart`: Confirm cart is empty post-checkout.
+  - Verified identical end-to-end integration behavior against live PostgreSQL 17 in `PostgresApiIntegrationTest`.
+  - Audited all shared contracts in `API_CONTRACT.md` against live controllers and DTOs; zero breaking changes or regressions introduced.
+  - Updated `README.md` with complete flow guide, local PostgreSQL setup, and run instructions.
+- **Files Created / Modified**:
+  - `src/test/java/com/example/ecommerce/ProductAndCartIntegrationTest.java` (Added `testCompletePurchaseFlow()`)
+  - `README.md` (Updated setup, test commands, database instructions, and end-to-end flow)
+  - `PROJECT_STATUS.md` (Updated with TASK-010 results and CI readiness confirmation)
+- **Exact Commands & Actual Results**:
+  1. Full Maven Build & Test Suite:
+     - Command: `./mvnw.cmd test`
+     - Result: `BUILD SUCCESS` (Total time: 13.218 s)
+     - Test Summary: **81 tests run, 0 failures, 0 errors, 0 skipped**
+       - `CartControllerTest`: 12 tests passed
+       - `CheckoutControllerTest`: 6 tests passed
+       - `ProductControllerTest`: 5 tests passed
+       - `CartServiceTest`: 14 tests passed
+       - `CheckoutServiceTest`: 9 tests passed
+       - `PricingServiceTest`: 18 tests passed
+       - `ProductServiceTest`: 4 tests passed
+       - `ProductAndCartIntegrationTest`: 4 tests passed (including complete purchase flow)
+       - `PostgresApiIntegrationTest`: 8 tests passed (against live PostgreSQL 17)
+       - `EcommerceApplicationTests`: 1 test passed
+  2. Dedicated PostgreSQL Integration Test Suite:
+     - Command: `./mvnw.cmd test -Dtest=PostgresApiIntegrationTest`
+     - Result: `BUILD SUCCESS` (Total time: 8.453 s)
+     - Test Summary: **8 tests run, 0 failures, 0 errors, 0 skipped** (all executing against real PostgreSQL 17 on port 5433)
+- **Remaining Blockers**:
+  - None. All features integrated, tested, and passing.
+- **CI Readiness Assessment**:
+  - **Status: READY FOR CI PIPELINE SETUP**
+  - Application builds cleanly using standard Maven wrapper (`./mvnw`).
+  - Unit tests run fast and deterministically with in-memory H2 default.
+  - PostgreSQL integration tests can run in CI using a GitHub Actions PostgreSQL service container (`postgres:17` on port 5432 or 5433).
+  - Environment fallback (`PostgresAvailableCondition`) protects the build if PostgreSQL service is offline.
+  - No secret credentials or sensitive tokens hardcoded in the codebase.
+- **Next Steps**:
+  - Team / DevOps lead can now proceed to implement the GitHub Actions CI workflow (`.github/workflows/ci.yml`).
+
+---
 
 ### TASK-009: Real PostgreSQL API Integration Testing & Local Setup Documentation
 - **Task ID**: `TASK-009`
