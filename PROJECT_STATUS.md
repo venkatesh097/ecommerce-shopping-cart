@@ -8,62 +8,61 @@ This document tracks all tasks, owners, implementation status, build/test result
 
 | Task ID | Task Description | Owner | Status | Build / Test Results |
 |---|---|---|---|---|
-| `TASK-001` | Initialize Spring Boot Maven Backend Project & Base Architecture | Backend Lead / Agent | `COMPLETED` | `BUILD SUCCESS` (1 test passed, 0 failures) |
+| `TASK-001` | Initialize Spring Boot Maven Backend Project & Base Architecture | Backend Lead / Agent | `COMPLETED` | `BUILD SUCCESS` (1 test passed) |
 | `TASK-002` | API Contracts, Domain Model Foundations & Member Coordination | Member 1 (with Member 2) | `COMPLETED` | `BUILD SUCCESS` (24 source files compiled, 1 test passed) |
+| `TASK-003` | Implement Product Catalog Feature (Repository, Service, Controller, Tests) | Member 1 | `COMPLETED` | `BUILD SUCCESS` (10 tests passed, 0 failures) |
 
 ---
 
 ## Task Details
 
-### TASK-002: API Contracts, Domain Model Foundations & Member Coordination
-- **Task ID**: `TASK-002`
-- **Owner / Assignee**: Member 1 (in coordination with Member 2)
-- **Status**: `COMPLETED` (Ready for Review)
+### TASK-003: Product Catalog Feature (Member 1)
+- **Task ID**: `TASK-003`
+- **Owner / Assignee**: Member 1
+- **Status**: `COMPLETED`
 - **Scope**:
-  - Establish shared package structure under `com.example.ecommerce`.
-  - Agree on domain models: `Product`, `Cart`, `CartItem`, `Order`, `OrderItem`, `OrderStatus`.
-  - Agree on demo cart identification (`cartKey = "demo-cart"`).
-  - Agree on monetary precision and rounding: `BigDecimal`, `DECIMAL(10, 2)`, 2 decimal places with `RoundingMode.HALF_UP`.
-  - Agree on Pricing Service contract (`PricingService` interface) so Member 2 can independently implement calculation logic.
-  - Establish shared DTOs for Product catalog, Cart operations, and Checkout/Orders.
-  - Document complete specification in `API_CONTRACT.md`.
-  - Add foundation interfaces and models without implementing unnecessary business logic.
-- **Files Changed / Created**:
-  - `API_CONTRACT.md` (Created comprehensive contract specification)
-  - `src/main/java/com/example/ecommerce/entity/Product.java`
-  - `src/main/java/com/example/ecommerce/entity/Cart.java`
-  - `src/main/java/com/example/ecommerce/entity/CartItem.java`
-  - `src/main/java/com/example/ecommerce/entity/Order.java`
-  - `src/main/java/com/example/ecommerce/entity/OrderItem.java`
-  - `src/main/java/com/example/ecommerce/entity/OrderStatus.java`
-  - `src/main/java/com/example/ecommerce/dto/ProductDto.java`
-  - `src/main/java/com/example/ecommerce/dto/CartItemDto.java`
-  - `src/main/java/com/example/ecommerce/dto/CartDto.java`
-  - `src/main/java/com/example/ecommerce/dto/AddToCartRequest.java`
-  - `src/main/java/com/example/ecommerce/dto/UpdateCartItemRequest.java`
-  - `src/main/java/com/example/ecommerce/dto/CheckoutRequest.java`
-  - `src/main/java/com/example/ecommerce/dto/PricingResultDto.java`
-  - `src/main/java/com/example/ecommerce/dto/OrderItemResponse.java`
-  - `src/main/java/com/example/ecommerce/dto/OrderResponse.java`
-  - `src/main/java/com/example/ecommerce/service/PricingService.java`
-  - `src/test/resources/application.properties`
+  - Implement `ProductRepository` extending Spring Data JPA `JpaRepository`.
+  - Create centralized error handling: `ResourceNotFoundException`, `ErrorResponse`, and `GlobalExceptionHandler` (`@RestControllerAdvice`).
+  - Implement `ProductService` interface and `ProductServiceImpl` with transactional boundaries and entity-to-DTO mapping.
+  - Implement `ProductController` exposing:
+    - `GET /api/products` (list all products as `List<ProductDto>`)
+    - `GET /api/products/{id}` (retrieve product by ID as `ProductDto`, returning 404 for unknown products)
+    - `POST /api/products` (create product with validation, returning 201 Created)
+  - Ensure domain entity (`Product`) is never directly exposed across REST boundaries.
+  - Add JUnit 5 test suites covering product listing, retrieval by ID, not-found handling (404), valid creation (201), and invalid input validation (400).
+- **Files Created / Modified**:
+  - `src/main/java/com/example/ecommerce/exception/ResourceNotFoundException.java`
+  - `src/main/java/com/example/ecommerce/exception/ErrorResponse.java`
+  - `src/main/java/com/example/ecommerce/exception/GlobalExceptionHandler.java`
+  - `src/main/java/com/example/ecommerce/repository/ProductRepository.java`
+  - `src/main/java/com/example/ecommerce/service/ProductService.java`
+  - `src/main/java/com/example/ecommerce/service/ProductServiceImpl.java`
+  - `src/main/java/com/example/ecommerce/controller/ProductController.java`
+  - `src/test/java/com/example/ecommerce/service/ProductServiceTest.java`
+  - `src/test/java/com/example/ecommerce/controller/ProductControllerTest.java`
   - `PROJECT_STATUS.md`
 - **Actual Test / Build Results**:
   - Command: `mvn test`
-  - Compilation: 24 source files compiled successfully with `javac [debug parameters release 17]`.
-  - Execution Result: `BUILD SUCCESS`
-  - Tests run: 1 (`EcommerceApplicationTests.contextLoads()`)
-  - Failures: 0, Errors: 0, Skipped: 0
-  - Duration: 9.75 s
-- **Unresolved Decisions / Coordination Points for Review**:
-  1. **Tax Base Calculation**: Currently specified to compute tax on `(subtotal - discountAmount)`. Pending Member 2 confirmation if tax should apply to pre-discount subtotal instead.
-  2. **Supported Coupons**: Defaults established as `DISCOUNT10` (10% off) and `SAVE20` (20% off). Additional coupon logic to be defined by Member 2 in `PricingServiceImpl`.
-  3. **Cart Item Price Refresh**: `CartItem.unitPrice` holds the price at time of addition; confirmation on whether checkout refreshes with live `Product.price`.
+  - Execution Result: `BUILD SUCCESS` (Total time: 12.557 s)
+  - Test Breakdown:
+    - `ProductControllerTest`: 5 tests passed (list products, retrieve product by ID, handle unknown product -> 404, valid creation -> 201, invalid payload -> 400).
+    - `ProductServiceTest`: 4 tests passed (getAllProducts, getProductById, getProductById unknown throws exception, createProduct).
+    - `EcommerceApplicationTests`: 1 test passed (Spring context loads).
+    - Total: 10 tests run, 0 failures, 0 errors, 0 skipped.
+- **Blockers / Challenges**:
+  - None. All tests pass cleanly with isolated H2 test profile.
 - **Next Steps**:
-  1. Review and sign off on `API_CONTRACT.md` with Member 2.
-  2. Member 1: Implement Product repository, service, and controller (`/api/products`).
-  3. Member 2: Implement `PricingServiceImpl` implementing `PricingService` with discount/tax logic and JUnit unit tests.
-  4. Member 1: Implement Cart operations (`/api/cart`) and Checkout flow (`/api/checkout`).
+  1. Coordinate with Member 2 on `PricingService` implementation.
+  2. Implement Member 1's Cart feature: `CartRepository`, `CartItemRepository`, `CartService`, and `CartController` (`/api/cart`).
+
+---
+
+### TASK-002: API Contracts, Domain Model Foundations & Member Coordination
+- **Task ID**: `TASK-002`
+- **Owner / Assignee**: Member 1 (in coordination with Member 2)
+- **Status**: `COMPLETED`
+- **Scope**: Established shared domain models, DTOs, `PricingService` interface contract, and `API_CONTRACT.md`.
+- **Actual Test / Build Results**: `BUILD SUCCESS` (1 test passed).
 
 ---
 
