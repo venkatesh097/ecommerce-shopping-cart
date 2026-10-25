@@ -90,8 +90,8 @@ public interface PricingService {
 |---|---|---|---|---|
 | `GET` | `/api/cart` | None (Optional `?couponCode=...`) | `CartDto` | Retrieve demo cart with pricing breakdown |
 | `POST` | `/api/cart/items` | `AddToCartRequest` | `CartDto` | Add product to cart (or increment quantity) |
-| `PUT` | `/api/cart/items/{itemId}` | `UpdateCartItemRequest` | `CartDto` | Update item quantity |
-| `DELETE` | `/api/cart/items/{itemId}` | None | `CartDto` | Remove specific item from cart |
+| `PATCH` / `PUT` | `/api/cart/items/{productId}` | `UpdateCartItemRequest` | `CartDto` | Update item quantity |
+| `DELETE` | `/api/cart/items/{productId}` | None | `CartDto` | Remove specific item from cart |
 | `DELETE` | `/api/cart` | None | `204 No Content` | Clear entire cart |
 
 ### 5.3 Checkout & Order API
