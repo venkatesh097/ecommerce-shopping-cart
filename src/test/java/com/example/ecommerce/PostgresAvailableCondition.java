@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class PostgresAvailableCondition implements ExecutionCondition {
 
     private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 5433;
+    private static final int DEFAULT_PORT = 5432;
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
