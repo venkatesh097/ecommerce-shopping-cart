@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | E-Commerce Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span>🛒</span>
+                <span>E-Shop</span>
+            </a>
+            <nav class="nav-links">
+                <a href="index.html">Products</a>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span id="cart-count-badge" class="cart-count-badge">0</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Message Banner -->
+        <div id="message-banner" class="message-banner">
+            <span id="message-text"></span>
+            <button class="banner-close" onclick="clearMessage()">&times;</button>
+        </div>
+
+        <div class="page-header">
+            <h1 class="page-title">Checkout</h1>
+            <p class="page-subtitle">Complete your shipping details to place your order</p>
+        </div>
+
+        <div class="cart-layout">
+            <!-- Left: Checkout Form -->
+            <div class="form-card">
+                <form id="checkout-form" onsubmit="handlePlaceOrder(event)">
+                    <div class="form-group">
+                        <label for="cust-name">Full Name *</label>
+                        <input type="text" id="cust-name" required placeholder="John Doe" maxlength="120" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cust-email">Email Address *</label>
+                        <input type="email" id="cust-email" required placeholder="john.doe@example.com" maxlength="150" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cust-address">Shipping Address *</label>
+                        <textarea id="cust-address" rows="3" required placeholder="Street address, City, State, ZIP code" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cust-payment">Payment Method</label>
+                        <select id="cust-payment">
+                            <option value="CREDIT_CARD">Credit / Debit Card</option>
+                            <option value="UPI">UPI / Digital Wallet</option>
+                            <option value="NET_BANKING">Net Banking</option>
+                            <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="btn-submit-order" class="btn btn-primary btn-block">
+                        Place Order &rarr;
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Order Summary Preview -->
+            <div class="summary-card">
+                <h2 class="summary-title">Order Items</h2>
+                <div id="checkout-items-list" class="summary-rows" style="margin-bottom: 1rem;">
+                    <!-- Injected by checkout.js -->
+                </div>
+
+                <div class="summary-rows">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="chk-subtotal">$0.00</span>
+                    </div>
+                    <div id="chk-discount-row" class="summary-row discount" style="display: none;">
+                        <span id="chk-discount-label">Discount</span>
+                        <span id="chk-discount">-$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax (10%)</span>
+                        <span id="chk-tax">$0.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total to Pay</span>
+                        <span id="chk-total">$0.00</span>
+                    </div>
+                </div>
+
+                <a href="cart.html" class="btn btn-secondary btn-block btn-sm" style="margin-top: 0.5rem;">
+                    &larr; Back to Cart
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>E-Commerce Shopping Cart &bull; Spring Boot + PostgreSQL</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/checkout.js"></script>
+</body>
+</html>

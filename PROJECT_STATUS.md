@@ -18,6 +18,7 @@ This document tracks all tasks, owners, implementation status, build/test result
 | `TASK-008` | Implement Checkout & Order Processing API | Member 2 | `COMPLETED` | `BUILD SUCCESS` (72 tests passed, 0 failures) |
 | `TASK-009` | Real PostgreSQL API Integration Testing & Local Setup Documentation | Member 2 | `COMPLETED` | `BUILD SUCCESS` (80 tests passed, 0 failures) |
 | `TASK-010` | End-to-End Integration Verification, Feature Alignment & CI Readiness | Member 2 (with Member 1) | `COMPLETED` | `BUILD SUCCESS` (81 tests passed, 0 failures; 8/8 PostgreSQL tests passed) |
+| `TASK-011` | Build Interactive Single-Page Application (SPA) Frontend | Agent | `COMPLETED` | `BUILD SUCCESS` (81 tests passed, 0 failures; static UI verified) |
 
 ---
 
@@ -32,6 +33,24 @@ This document tracks all tasks, owners, implementation status, build/test result
 ---
 
 ## Task Details
+
+### TASK-011: Build Multi-Page Web UI & Startup Data Seeder
+- **Task ID**: `TASK-011`
+- **Owner / Assignee**: Frontend & DevOps Lead
+- **Status**: `COMPLETED`
+- **Scope**:
+  - Implemented `DataInitializer.java` (`CommandLineRunner`) to auto-seed 8 realistic sample products with pricing and stock on startup when database is empty.
+  - Implemented clean multi-page web UI under `src/main/resources/static/`:
+    - `index.html` + `js/products.js`: Product catalog cards, stock status, "Add to Cart" interaction, dynamic header badge.
+    - `cart.html` + `js/cart.js`: Cart table with quantity +/- modification, item removal, clear cart, coupon box (`DISCOUNT10`, `SAVE20`), and live subtotal/discount/tax/grand total breakdown directly rendered from backend calculations.
+    - `checkout.html` + `js/checkout.js`: Customer details form, payment method select, live cart item preview, and order submission.
+    - `order.html` + `js/order.js`: Order confirmation screen displaying confirmed order number, customer details, purchased item breakdown, and status.
+    - `css/style.css`: Clean, responsive shared stylesheet.
+    - `js/api.js`: Shared Vanilla JS fetch API wrapper with comprehensive error handling reading from `ErrorResponse`.
+  - Updated `README.md` with instructions on accessing the web store at `http://localhost:8080/`.
+- **Actual Test / Build Results**: `BUILD SUCCESS` (81 automated tests passed, 0 failures).
+
+---
 
 ### TASK-010: End-to-End Integration Verification, Feature Alignment & CI Readiness
 - **Task ID**: `TASK-010`

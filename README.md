@@ -221,3 +221,11 @@ Example:
 # Or via environment variable in PowerShell:
 $env:SPRING_PROFILES_ACTIVE="h2"; ./mvnw.cmd spring-boot:run
 ```
+
+### Accessing the Web Store (Frontend UI)
+Once started, open your web browser to:
+- **Product Catalog (Home)**: [http://localhost:8080/](http://localhost:8080/)
+- **Shopping Cart**: [http://localhost:8080/cart.html](http://localhost:8080/cart.html)
+- **Checkout Form**: [http://localhost:8080/checkout.html](http://localhost:8080/checkout.html)
+
+*Note: The application automatically seeds initial sample products into the database on first startup if the catalog is empty.*

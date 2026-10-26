@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation | E-Commerce Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span>🛒</span>
+                <span>E-Shop</span>
+            </a>
+            <nav class="nav-links">
+                <a href="index.html">Products</a>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span id="cart-count-badge" class="cart-count-badge">0</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Message Banner -->
+        <div id="message-banner" class="message-banner">
+            <span id="message-text"></span>
+            <button class="banner-close" onclick="clearMessage()">&times;</button>
+        </div>
+
+        <!-- Order Card Container -->
+        <div id="order-card-container" class="order-card" style="display: none;">
+            <div class="order-success-icon">🎉</div>
+            <div class="order-header-text">
+                <h1 class="page-title">Thank You For Your Order!</h1>
+                <p class="page-subtitle">Your order has been placed and confirmed.</p>
+            </div>
+
+            <!-- Details List -->
+            <div class="order-info-list">
+                <div class="order-info-row">
+                    <span>Order Number:</span>
+                    <strong id="ord-number" style="font-family: monospace;">-</strong>
+                </div>
+                <div class="order-info-row">
+                    <span>Order Status:</span>
+                    <span id="ord-status" class="order-badge">CONFIRMED</span>
+                </div>
+                <div class="order-info-row">
+                    <span>Customer Name:</span>
+                    <span id="ord-customer">-</span>
+                </div>
+                <div class="order-info-row">
+                    <span>Email Address:</span>
+                    <span id="ord-email">-</span>
+                </div>
+                <div class="order-info-row">
+                    <span>Shipping Address:</span>
+                    <span id="ord-address">-</span>
+                </div>
+            </div>
+
+            <!-- Purchased Items Table -->
+            <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Purchased Items</h3>
+            <table class="order-items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody id="ord-items-tbody">
+                    <!-- Populated by order.js -->
+                </tbody>
+            </table>
+
+            <!-- Pricing Breakdown -->
+            <div class="summary-rows" style="margin-bottom: 1.5rem;">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="ord-subtotal">$0.00</span>
+                </div>
+                <div id="ord-discount-row" class="summary-row discount" style="display: none;">
+                    <span>Discount</span>
+                    <span id="ord-discount">-$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (10%)</span>
+                    <span id="ord-tax">$0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total Charged</span>
+                    <span id="ord-total">$0.00</span>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="index.html" class="btn btn-primary">&larr; Return to Products</a>
+            </div>
+        </div>
+
+        <!-- Missing Order State -->
+        <div id="order-error-state" class="empty-box" style="display: none;">
+            <div class="empty-box-icon">❓</div>
+            <h3>Order Not Found</h3>
+            <p id="order-error-msg">Could not load the requested order.</p>
+            <a href="index.html" class="btn btn-primary">Go to Products</a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>E-Commerce Shopping Cart &bull; Spring Boot + PostgreSQL</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/order.js"></script>
+</body>
+</html>

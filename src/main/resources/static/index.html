@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products | E-Commerce Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span>🛒</span>
+                <span>E-Shop</span>
+            </a>
+            <nav class="nav-links">
+                <a href="index.html" class="active">Products</a>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span id="cart-count-badge" class="cart-count-badge">0</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Message Banner -->
+        <div id="message-banner" class="message-banner">
+            <span id="message-text"></span>
+            <button class="banner-close" onclick="clearMessage()">&times;</button>
+        </div>
+
+        <div class="page-header">
+            <h1 class="page-title">Product Catalog</h1>
+            <p class="page-subtitle" id="catalog-subtitle">Loading available products...</p>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="products-grid" class="products-grid">
+            <!-- Injected by products.js -->
+        </div>
+
+        <!-- Empty Products State -->
+        <div id="empty-products" class="empty-box" style="display: none;">
+            <div class="empty-box-icon">📦</div>
+            <h3>No products found</h3>
+            <p>The product catalog is currently empty.</p>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>E-Commerce Shopping Cart &bull; Spring Boot + PostgreSQL</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/products.js"></script>
+</body>
+</html>
